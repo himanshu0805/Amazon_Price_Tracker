@@ -9,12 +9,14 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
@@ -24,16 +26,40 @@ import io.github.bonigarcia.wdm.WebDriverManager;
 public class PriceTracker {
 
 	public static void main(String[] args) throws IOException {
+		
+		Scanner sc = new Scanner(System.in);
+		System.out.println("Enter Selection:- ");
+		System.out.println("1.) To Search for Keyword Warning it will overite the file");
+		System.out.println("2.) Update daily price values");
+		
+		int number = sc.nextInt();
 
-//		String SearchKeyword = "earphone";
-//		List<String> UrlList = getItemUrlWithSearch(SearchKeyword);
-//		getProductDataFromUrl(UrlList);
-		ReadAndUpdateCsvFile("C:\\Users\\Himanshu\\Documents\\Project\\Amazon_Price_Tracker\\Result.csv");
+	    // switch statement to check size
+	    switch (number) {
+
+	      case 1:
+	    	System.out.println("Enter keyword to search");
+	    	String SearchKeyword = sc.nextLine();
+	  		List<String> UrlList = getItemUrlWithSearch(SearchKeyword);
+	  		getProductDataFromUrl(UrlList);
+	        break;
+
+	      case 2:
+	    	ReadAndUpdateCsvFile("C:\\Users\\Himanshu\\Documents\\Project\\Amazon_Price_Tracker\\Result.csv");
+	        break;
+
+	      default:
+	    	ReadAndUpdateCsvFile("C:\\Users\\Himanshu\\Documents\\Project\\Amazon_Price_Tracker\\Result.csv");
+	        break;
+
+	    }
 	}
 
 	public static List<String> getItemUrlWithSearch(String searchKeyword) {
 		WebDriverManager.chromedriver().setup();
-		WebDriver driver = new ChromeDriver();
+		ChromeOptions chromeOptions = new ChromeOptions();
+	    chromeOptions.addArguments("--remote-allow-origins=*");
+	    WebDriver driver = new ChromeDriver(chromeOptions);
 
 		driver.get("https://www.amazon.in/");
 
@@ -62,7 +88,9 @@ public class PriceTracker {
 
 	public static void getProductDataFromUrl(List<String> UrlList) throws IOException {
 		WebDriverManager.chromedriver().setup();
-		WebDriver driver = new ChromeDriver();
+		ChromeOptions chromeOptions = new ChromeOptions();
+	    chromeOptions.addArguments("--remote-allow-origins=*");
+	    WebDriver driver = new ChromeDriver(chromeOptions);
 
 		List<String> item_Name = new ArrayList<String>();
 		List<String> item_Price = new ArrayList<String>();
@@ -71,7 +99,7 @@ public class PriceTracker {
 		for (int i = 0; i < UrlList.size(); i++) {
 			System.out.println("Url value:- " + UrlList.get(i));
 			driver.get(UrlList.get(i).toString());
-			item_Name.add(driver.findElement(By.xpath("//span[@id='productTitle']")).getText());
+			item_Name.add(driver.findElement(By.xpath("//span[@id='productTitle']")).getText().replace(",", ""));
 			item_Price.add(driver.findElement(By.xpath("//span[@class='a-price-whole']")).getText().replace("\"", ""));
 		}
 		String Filepath = new File("Result.csv").getCanonicalPath();
@@ -89,7 +117,6 @@ public class PriceTracker {
 		try {
 			file.createNewFile();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 
@@ -97,10 +124,6 @@ public class PriceTracker {
 			// File Writer interface
 			FileWriter outputfile = new FileWriter(file);
 			CSVWriter writer = new CSVWriter(outputfile);
-
-			// adding Columns to csv file
-//			String[] header = { "Url", "Item_Name", "Item_Price", "Date_Checked" };
-//			writer.writeNext(header);
 
 			// adding data to csv the first Time
 			for (int i = 0; i < Url.size(); i++) {
@@ -146,9 +169,6 @@ public class PriceTracker {
 			String[] line;
 			while ((line = csvReader.readNext()) != null) {
 				if (line != null) {
-//					System.out.print("\nLine:= " + Arrays.toString(line));
-					
-				
 					
 					String Strline = Arrays.toString(line);
 					item_URL.add(Strline.split(",")[0].replace("[", "").replace("]", ""));
@@ -156,13 +176,11 @@ public class PriceTracker {
 					item_Price.add(Strline.split(",")[2].replace("[", "").replace("]", ""));
 					Price_Date.add(Strline.split(",")[3].replace("[", "").replace("]", ""));
 					
-//					System.out.print("\nitem_URL Str:= " + Strline);
 					
 					
 				}
 
 			}
-//			System.out.print("\n\nitem_URL ArrList:= " + item_URL.get(1).toString());
 			getProductDataFromUrl(item_URL, item_Name,item_Price,Price_Date);
 		
 		} catch (Exception e) {
